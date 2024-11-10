@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State var isMagnifying: Bool = false
     @State var currentMagnification: CGFloat = 1.0
     @State var provisionalMagnification: CGFloat = 0.0
-    @State var magnificationAnchor: UnitPoint = .topLeading
+    @State var magnificationAnchor: UnitPoint = .center
 
     let magnificationLowerLimit = 0.2
     let magnificationUpperLimit = 1.0
@@ -79,15 +80,19 @@ struct ContentView: View {
                         .id(key)
                 }
             }
-            .scaleEffect(currentMagnification + provisionalMagnification, anchor: .center)
+            .scaleEffect(currentMagnification + provisionalMagnification, anchor: magnificationAnchor)
             .frame(
-                width: 1400.0 * (currentMagnification + provisionalMagnification),
-                height: 1400.0 * (currentMagnification + provisionalMagnification)
+                width: isMagnifying ? 1400.0 * (currentMagnification + provisionalMagnification) :
+                    1400.0 * currentMagnification,
+                height: isMagnifying ? 1400.0 * (currentMagnification + provisionalMagnification) :
+                    1400.0 * currentMagnification,
+                alignment: .center
             )
         }
         .gesture(
             MagnifyGesture()
                 .onChanged { gesture in
+                    isMagnifying = true
                     let originalMagnification = gesture.magnification - 1.0
                     let expectedMagnification = currentMagnification + originalMagnification
                     if expectedMagnification < magnificationLowerLimit {
@@ -103,7 +108,7 @@ struct ContentView: View {
                     }
                     magnificationAnchor = gesture.startAnchor
                 }
-                .onEnded { gesture in
+                .onEnded { _ in
                     withAnimation(.smooth.speed(2.0)) {
                         let finalMagnificationState = currentMagnification + provisionalMagnification
                         if finalMagnificationState < 0.2 {
@@ -114,8 +119,8 @@ struct ContentView: View {
                             currentMagnification += provisionalMagnification
                         }
                         provisionalMagnification = .zero
-                    } completion: {
-                        magnificationAnchor = .topLeading
+                        magnificationAnchor = .center
+                        isMagnifying = false
                     }
                 }
         )
