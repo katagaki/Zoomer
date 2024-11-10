@@ -7,8 +7,44 @@
 
 import SwiftUI
 
+
+let symbolKeys: [String] = [
+    "airplane",
+    "ant",
+    "bell",
+    "bicycle",
+    "bolt",
+    "bookmark",
+    "calendar",
+    "camera",
+    "cart",
+    "cloud",
+    "doc",
+    "envelope",
+    "flag",
+    "flame",
+    "folder",
+    "gift",
+    "heart",
+    "house",
+    "leaf",
+    "link",
+    "lock",
+    "map",
+    "mic",
+    "moon",
+    "paperclip",
+    "pencil",
+    "phone",
+    "star",
+    "sun.min",
+    "trash",
+    "umbrella",
+    "wifi",
+    "wrench"
+]
+
 struct ContentView: View {
-    @State var isMagnifying: Bool = false
     @State var currentMagnification: CGFloat = 1.0
     @State var provisionalMagnification: CGFloat = 0.0
     @State var magnificationAnchor: UnitPoint = .center
@@ -16,48 +52,15 @@ struct ContentView: View {
     let magnificationLowerLimit = 0.2
     let magnificationUpperLimit = 1.0
 
-    let symbols: [String: UnitPoint] = [
-        "airplane": UnitPoint(x: 432, y: 1182),
-        "ant": UnitPoint(x: 982, y: 723),
-        "bell": UnitPoint(x: 1085, y: 295),
-        "bicycle": UnitPoint(x: 137, y: 467),
-        "bolt": UnitPoint(x: 1259, y: 1260),
-        "bookmark": UnitPoint(x: 923, y: 508),
-        "calendar": UnitPoint(x: 332, y: 1045),
-        "camera": UnitPoint(x: 1120, y: 129),
-        "cart": UnitPoint(x: 815, y: 1135),
-        "cloud": UnitPoint(x: 1221, y: 844),
-        "doc": UnitPoint(x: 245, y: 682),
-        "envelope": UnitPoint(x: 360, y: 1205),
-        "flag": UnitPoint(x: 1200, y: 340),
-        "flame": UnitPoint(x: 590, y: 930),
-        "folder": UnitPoint(x: 750, y: 500),
-        "gift": UnitPoint(x: 205, y: 670),
-        "heart": UnitPoint(x: 1300, y: 1245),
-        "house": UnitPoint(x: 655, y: 1200),
-        "leaf": UnitPoint(x: 945, y: 765),
-        "link": UnitPoint(x: 1020, y: 255),
-        "lock": UnitPoint(x: 1175, y: 450),
-        "map": UnitPoint(x: 300, y: 800),
-        "mic": UnitPoint(x: 865, y: 615),
-        "moon": UnitPoint(x: 1080, y: 1300),
-        "paperclip": UnitPoint(x: 140, y: 330),
-        "pencil": UnitPoint(x: 980, y: 1000),
-        "phone": UnitPoint(x: 675, y: 1035),
-        "star": UnitPoint(x: 1220, y: 490),
-        "sun.min": UnitPoint(x: 380, y: 1300),
-        "trash": UnitPoint(x: 760, y: 250),
-        "umbrella": UnitPoint(x: 1095, y: 1185),
-        "wifi": UnitPoint(x: 510, y: 895),
-        "wrench": UnitPoint(x: 130, y: 1325)
-    ]
+    let image: UIImage = UIImage(resource: .sample)
+    @State var symbols: [String: UnitPoint] = [:]
 
     var body: some View {
         ScrollView([.horizontal, .vertical]) {
             ZStack(alignment: .topLeading) {
-                Image(.sample)
+                Image(uiImage: image)
                     .resizable()
-                    .frame(width: 1400.0, height: 1400.0, alignment: .topLeading)
+                    .frame(width: image.size.width, height: image.size.height, alignment: .topLeading)
                 ForEach(symbols.keys.sorted(), id: \.self) { key in
                     Image(systemName: key)
                         .resizable()
@@ -66,12 +69,12 @@ struct ContentView: View {
                                                green: Double.random(in: 0.0..<1.0),
                                                blue: Double.random(in: 0.0..<1.0),
                                                opacity: 0.5))
-                        .frame(width: 60.0, height: 60.0, alignment: .center)
-                        .padding()
+                        .frame(width: 60.0, height: 60.0, alignment: .topLeading)
+                        .padding(10.0)
                         .background(.regularMaterial)
                         .overlay {
                             Rectangle()
-                                .strokeBorder(.primary, lineWidth: 4.0)
+                                .strokeBorder(.primary, lineWidth: 5.0)
                         }
                         .position(
                             x: CGFloat(symbols[key]?.x ?? 0.0),
@@ -82,17 +85,24 @@ struct ContentView: View {
             }
             .scaleEffect(currentMagnification + provisionalMagnification, anchor: magnificationAnchor)
             .frame(
-                width: isMagnifying ? 1400.0 * (currentMagnification + provisionalMagnification) :
-                    1400.0 * currentMagnification,
-                height: isMagnifying ? 1400.0 * (currentMagnification + provisionalMagnification) :
-                    1400.0 * currentMagnification,
+                width: image.size.width * (currentMagnification + provisionalMagnification),
+                height: image.size.height * (currentMagnification + provisionalMagnification),
                 alignment: .center
             )
+        }
+        .overlay {
+            ZStack(alignment: .topLeading) {
+                Color.clear
+                VStack(alignment: .leading) {
+                    Text("Current Magnification: \(currentMagnification)")
+                    Text("Provisional Magnification: \(provisionalMagnification)")
+                    Text("Anchor: \(magnificationAnchor)")
+                }
+            }
         }
         .gesture(
             MagnifyGesture()
                 .onChanged { gesture in
-                    isMagnifying = true
                     let originalMagnification = gesture.magnification - 1.0
                     let expectedMagnification = currentMagnification + originalMagnification
                     if expectedMagnification < magnificationLowerLimit {
@@ -120,9 +130,18 @@ struct ContentView: View {
                         }
                         provisionalMagnification = .zero
                         magnificationAnchor = .center
-                        isMagnifying = false
                     }
                 }
         )
+        .onAppear {
+            for symbolKey in symbolKeys {
+                let width = Int(image.size.width)
+                let height = Int(image.size.height)
+                symbols[symbolKey] = UnitPoint(
+                    x: CGFloat(Int.random(in: 90..<(width - 90))),
+                    y: CGFloat(Int.random(in: 90..<(height - 90)))
+                )
+            }
+        }
     }
 }
