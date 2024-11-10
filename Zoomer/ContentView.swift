@@ -111,10 +111,10 @@ struct ContentView: View {
                 .onEnded { _ in
                     withAnimation(.smooth.speed(2.0)) {
                         let finalMagnificationState = currentMagnification + provisionalMagnification
-                        if finalMagnificationState < 0.2 {
-                            currentMagnification = 0.2
-                        } else if finalMagnificationState > 1.0 {
-                            currentMagnification = 1.0
+                        if finalMagnificationState < magnificationLowerLimit {
+                            currentMagnification = magnificationLowerLimit
+                        } else if finalMagnificationState > magnificationUpperLimit {
+                            currentMagnification = magnificationUpperLimit
                         } else {
                             currentMagnification += provisionalMagnification
                         }
